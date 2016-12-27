@@ -13,8 +13,13 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Date;
 
+import org.apache.commons.codec.language.Soundex;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.Tokenizer;
+import org.apache.lucene.analysis.phonetic.PhoneticFilter;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.standard.StandardTokenizer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.LongPoint;
@@ -39,13 +44,14 @@ public class Main {
 		  
 
 	  /** Index all text files under a directory. */
-	  public static void index(String indexPath, Path docDir) {
+	  public static void index(String indexPath, Path docDir, boolean useSoundex) {
 	    Date start = new Date();
 	    try {
 	      System.out.println("Indexing to directory '" + indexPath + "'...");
 
 	      Directory dir = FSDirectory.open(Paths.get(indexPath));
-	      Analyzer analyzer = new StandardAnalyzer();
+	      Analyzer analyzer = (useSoundex ? getSoundexAnalyzer() : new StandardAnalyzer());
+	      
 	      IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
 
 	      iwc.setOpenMode(OpenMode.CREATE);
@@ -63,6 +69,17 @@ public class Main {
 	      System.out.println(" caught a " + e.getClass() +
 	       "\n with message: " + e.getMessage());
 	    }
+	  }
+	  
+	  private static Analyzer getSoundexAnalyzer() {   // See http://stackoverflow.com/questions/38599692/how-to-implement-a-phonetic-search-using-lucene
+		  return new Analyzer() {
+  		    @Override
+  		    protected TokenStreamComponents createComponents(String fieldName) {
+  		        Tokenizer tokenizer = new StandardTokenizer();
+  		        TokenStream stream = new PhoneticFilter(tokenizer, new Soundex(), false);
+  		        return new TokenStreamComponents(tokenizer, stream);
+  		    }
+  		};
 	  }
 	  
 	  private static void indexDocs(final IndexWriter writer, Path path) throws IOException {
@@ -108,12 +125,12 @@ public class Main {
 	   * @param query
 	   * @param indexPath
 	   */
-	  private static void search(String queryStr, String indexPath) {
+	  private static void search(String queryStr, String indexPath, boolean useSoundex) {
 		  IndexReader reader;
 		  try {
 			  reader = DirectoryReader.open(FSDirectory.open(Paths.get(indexPath)));
 			  IndexSearcher searcher = new IndexSearcher(reader);
-			  Analyzer analyzer = new StandardAnalyzer();
+			  Analyzer analyzer = (useSoundex ? getSoundexAnalyzer() : new StandardAnalyzer());
 			  QueryParser parser = new QueryParser("contents", analyzer);
 			  Query query = parser.parse(queryStr);
 			  TopDocs res = searcher.search(query, 100);
@@ -144,9 +161,9 @@ public class Main {
 
 	public static void main(String[] args) {
 		if(args[0].equals("index")) {
-			index(args[2], Paths.get(args[1]));
+			index(args[2], Paths.get(args[1]), args.length > 3 && args[3].equals("true"));
 		} else if(args[0].equals("search")) {
-			search(args[1], args[2]);
+			search(args[1], args[2], args.length > 3 && args[3].equals("true"));
 		}
 
 	}
