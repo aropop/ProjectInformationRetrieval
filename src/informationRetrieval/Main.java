@@ -181,7 +181,7 @@ public class Main {
 	  
 	  /**
 	   * 
-	   * Query syntax see http://lucene.apache.org/core/6_3_0/queryparser/index.html
+	   * Query syntax see http://lucene.apache.org/core/6_3_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package.description
 	   * 
 	   * @param query
 	   * @param indexPath

@@ -1,0 +1,76 @@
+\documentclass{article}
+\usepackage{vub}
+\usepackage{url}
+\usepackage{todonotes}
+\usepackage{listings}
+\title{Project Report}
+\subtitle{Group 3}
+\faculty{}
+\author{Arno De Witte (0500504)\\Douglas Horemans (...)\\Wout Van Riel (...)}
+
+
+\begin{document}
+\maketitle
+
+
+\section{Overview Aspects}
+Below of all the assigned aspects for our group. All aspects were implemented. \\
+\begin{center}
+    \begin{tabular}{ | l | l | p{10cm} |}
+    \hline
+    Number & Letter & Aspect \\ \hline
+    1 & a & Implement full boolean querying supporting AND, OR and NOT. \\ \hline
+    2 & b & Include the use of soundex to deal with misspellings and improve recall.
+Demonstrate the improvement \\ \hline
+    3 & b & Build and use B-tree over the dictionary to deal with * wild-cards. \\ \hline
+    4 & a & Implement cosine ranking, using a heap to get the top k ranked documents. \\ \hline
+    5 & a & Implement cosine ranking with high-idf query terms only for optimization
+of top-k ranking. Demonstrate the improvement. \\ \hline
+    6 & c & Implement and demonstrate the vector space model for XML information
+retrieval. \\ 
+    \hline
+    \end{tabular}
+\end{center}
+
+\section{Technologies}
+To solve almost all of the aspects the Apache Lucene\footnote{\url{http://lucene.apache.org/core/}} was used. Lucene is a Java library which provides a lot of information retrieval functionalities out of the box. However because of its large API, finding the right way to do certain tasks becomes more complicated as none of the team members were familiar with the library. \\
+For the soundex aspect, the Apache Commons codec\footnote{\url{https://commons.apache.org/proper/commons-codec/}} libary was used as it provides a soundex codec.\\
+\todo{parse shizzle hier}
+
+\section{Aspects}
+\subsection{Boolean querying}
+Lucene provides support for boolean queries. To implement this an index should be created and then be searched. The default implementation of lucene already supports these boolean queries. The syntax\footnote{\url{http://lucene.apache.org/core/6_3_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package.description}} for these queries is rather trivial. By default leaving spaces between query terms implies an OR-relation between these terms. Using the term \emph{AND} implies an AND-relation between terms and using the term \emph{NOT} implies a NOT-relation with the following term.\\
+To query the index you can use the \emph{search} command on the application as follows:
+\begin{lstlisting}[language=Bash]
+java -cp ./classpath Main search `car AND NOT bike' ./index
+\end{lstlisting}
+
+\subsection{Soundex}
+
+\subsection{B-tree wildcard}
+
+\subsection{Cosine ranking}
+
+\subsection{High idf query optimization}
+
+\subsection{XML retrieval}
+
+\section{Workload}
+Below an overview of how the workload was distributed for this project
+
+\begin{center}
+    \begin{tabular}{ | l | l |}
+    \hline
+    Task & Member\\ \hline
+    Aspect 1 & Arno De Witte \\ \hline
+    Aspect 2 & Arno De Witte \\ \hline
+    Aspect 3 & Douglas Horemans \\ \hline
+    Aspect 4 & Arno De Witte \\ \hline
+    Aspect 5 & Arno De Witte \\ \hline
+    Aspect 6 & Wout Van Riel \\ \hline
+    Report & Group effort \\ \hline
+    \end{tabular}
+\end{center}
+
+
+\end{document}
