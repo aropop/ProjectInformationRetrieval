@@ -12,6 +12,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.codec.language.Soundex;
 import org.apache.lucene.analysis.Analyzer;
@@ -27,21 +28,27 @@ import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.similarities.TFIDFSimilarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
 public class Main {
+	
+	public final static float IDF_TRESHOLD = 1;
 
 		  
 
@@ -57,7 +64,7 @@ public class Main {
 	      IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
 
 	      iwc.setOpenMode(OpenMode.CREATE);
-	      //iwc.setSimilarity();
+	      iwc.setSimilarity(new Cosine());
 	      
 	      
 	      IndexWriter writer = new IndexWriter(dir, iwc);
@@ -116,7 +123,7 @@ public class Main {
 
 	      // Add document statistics for cosine calculation
 	      FieldType fieldType = new FieldType();
-          fieldType.setIndexOptions(fieldType.indexOptions().DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
+          fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
           fieldType.setStored(true);
           fieldType.setStoreTermVectors(true);
           fieldType.setTokenized(true);
@@ -139,6 +146,39 @@ public class Main {
 	        return textFileContent;
 	    }
 	  
+	  
+	  // This how idf filter could work
+	  // Lucene already implements a stopword filter which removes typical low idf words
+	  private static Query filterHighIdf(Query input, IndexReader ir) {
+		  Cosine cos = new Cosine();
+		  if (input instanceof TermQuery) {
+			   // return null for terms that are not high enough
+			  try {
+				  float idf = cos.idf(ir.docFreq(((TermQuery) input).getTerm()), ir.numDocs());
+				  if(idf < IDF_TRESHOLD) {
+					  return null;
+				  } else {
+					  return input;
+				  }
+			  } catch (IOException e) {
+				  System.out.println("IO error" + e.getMessage());
+			  }
+			  return null;
+		  } else if (input instanceof BooleanQuery) {
+			  BooleanQuery bq = ((BooleanQuery) input);
+			  BooleanQuery.Builder builder = new BooleanQuery.Builder();
+			  List<BooleanClause> clauses = bq.clauses();
+			  for (BooleanClause b : clauses) {
+				  if(filterHighIdf(b.getQuery(), ir) != null) {
+					  builder.add(b);
+				  }
+			  }
+			  return builder.build();
+		  } else {
+			  return input;
+		  }
+	  }
+	  
 	  /**
 	   * 
 	   * Query syntax see http://lucene.apache.org/core/6_3_0/queryparser/index.html
@@ -151,9 +191,11 @@ public class Main {
 		  try {
 			  reader = DirectoryReader.open(FSDirectory.open(Paths.get(indexPath)));
 			  IndexSearcher searcher = new IndexSearcher(reader);
+			  searcher.setSimilarity(new Cosine());
 			  Analyzer analyzer = (useSoundex ? getSoundexAnalyzer() : new StandardAnalyzer());
 			  QueryParser parser = new QueryParser("contents", analyzer);
 			  Query query = parser.parse(queryStr);
+			  query = filterHighIdf(query, searcher.getIndexReader());		  
 			  TopDocs res = searcher.search(query, 100);
 			  ScoreDoc[] hits = res.scoreDocs;
 		      
