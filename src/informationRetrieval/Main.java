@@ -22,6 +22,7 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
@@ -36,6 +37,7 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.similarities.TFIDFSimilarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
@@ -55,8 +57,9 @@ public class Main {
 	      IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
 
 	      iwc.setOpenMode(OpenMode.CREATE);
-
-
+	      //iwc.setSimilarity();
+	      
+	      
 	      IndexWriter writer = new IndexWriter(dir, iwc);
 	      indexDocs(writer, docDir);
 
@@ -111,12 +114,30 @@ public class Main {
 	      
 	      doc.add(new LongPoint("modified", lastModified));
 
-	      doc.add(new TextField("contents", new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))));
+	      // Add document statistics for cosine calculation
+	      FieldType fieldType = new FieldType();
+          fieldType.setIndexOptions(fieldType.indexOptions().DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
+          fieldType.setStored(true);
+          fieldType.setStoreTermVectors(true);
+          fieldType.setTokenized(true);
+	      doc.add(new Field("contents", getAllText(file), fieldType));
 
           System.out.println("adding " + file);
           writer.addDocument(doc);
 	    }
 	  }
+	  
+	  public static String getAllText(Path f) { // TODO make http://stackoverflow.com/questions/12576119/lucene-indexing-of-html-files
+	        String textFileContent = "";
+
+	        try {
+				for (String line : Files.readAllLines(f)) {
+				    textFileContent += line;
+				}
+			} catch (IOException e) {
+			}
+	        return textFileContent;
+	    }
 	  
 	  /**
 	   * 
