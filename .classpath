@@ -60,5 +60,6 @@
 	<classpathentry kind="lib" path="lib/uimaj-core-2.3.1.jar"/>
 	<classpathentry kind="lib" path="lib/WhitespaceTokenizer-2.3.1.jar"/>
 	<classpathentry kind="lib" path="lib/xercesImpl-2.9.1.jar"/>
+	<classpathentry kind="lib" path="lib/jtidy-r938.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

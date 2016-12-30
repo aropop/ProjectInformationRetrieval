@@ -1,6 +1,7 @@
 package informationRetrieval;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -121,30 +122,24 @@ public class Main {
 	      
 	      doc.add(new LongPoint("modified", lastModified));
 
+	      HtmlParse parse = new HtmlParse(new FileInputStream(file.toFile()));
+	      
+	      Field titleField = new StringField("title", parse.getTitle(), Field.Store.YES);
+	      doc.add(titleField);
+	      
 	      // Add document statistics for cosine calculation
 	      FieldType fieldType = new FieldType();
           fieldType.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
           fieldType.setStored(true);
           fieldType.setStoreTermVectors(true);
           fieldType.setTokenized(true);
-	      doc.add(new Field("contents", getAllText(file), fieldType));
+	      doc.add(new Field("contents", parse.getBody(), fieldType));
 
           System.out.println("adding " + file);
           writer.addDocument(doc);
 	    }
 	  }
 	  
-	  public static String getAllText(Path f) { // TODO make http://stackoverflow.com/questions/12576119/lucene-indexing-of-html-files
-	        String textFileContent = "";
-
-	        try {
-				for (String line : Files.readAllLines(f)) {
-				    textFileContent += line;
-				}
-			} catch (IOException e) {
-			}
-	        return textFileContent;
-	    }
 	  
 	  
 	  // This how idf filter could work
