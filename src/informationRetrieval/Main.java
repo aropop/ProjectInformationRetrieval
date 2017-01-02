@@ -43,7 +43,7 @@ import org.apache.lucene.store.FSDirectory;
 
 public class Main {
 
-		  
+
 
 	  /** Index all text files under a directory. */
 	  public static void index(String indexPath, Path docDir, boolean useSoundex) {
@@ -53,13 +53,13 @@ public class Main {
 
 	      Directory dir = FSDirectory.open(Paths.get(indexPath));
 	      Analyzer analyzer = (useSoundex ? getSoundexAnalyzer() : new StandardAnalyzer());
-	      
+
 	      IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
 
 	      iwc.setOpenMode(OpenMode.CREATE);
 	      //iwc.setSimilarity();
-	      
-	      
+
+
 	      IndexWriter writer = new IndexWriter(dir, iwc);
 	      indexDocs(writer, docDir);
 
@@ -73,7 +73,7 @@ public class Main {
 	       "\n with message: " + e.getMessage());
 	    }
 	  }
-	  
+
 	  private static Analyzer getSoundexAnalyzer() {   // See http://stackoverflow.com/questions/38599692/how-to-implement-a-phonetic-search-using-lucene
 		  return new Analyzer() {
   		    @Override
@@ -84,7 +84,7 @@ public class Main {
   		    }
   		};
 	  }
-	  
+
 	  private static void indexDocs(final IndexWriter writer, Path path) throws IOException {
 	      if (Files.isDirectory(path)) {
 		      Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
@@ -108,10 +108,10 @@ public class Main {
 	    try (InputStream stream = Files.newInputStream(file)) {
 	      // make a new, empty document
 	      Document doc = new Document();
-	      
+
 	      Field pathField = new StringField("path", file.toString(), Field.Store.YES);
 	      doc.add(pathField);
-	      
+
 	      doc.add(new LongPoint("modified", lastModified));
 
 	      // Add document statistics for cosine calculation
@@ -126,7 +126,25 @@ public class Main {
           writer.addDocument(doc);
 	    }
 	  }
-	  
+
+		private static void indexXML(IndexWriter writer, Path file, long lastModified) throws IOException {
+			try (InputStream stream = Files.newInputStream(file)) {
+				Document doc = new Document();
+
+				Field pathField = new StringField("path", file.toString(), Field.Store.YES);
+				doc.add(pathField);
+				doc.add(new LongPoint("modified", lastModified));
+
+				FieldType fieldType = new FieldType();
+				fieldType.setIndexOptions(fieldType.indexOptions().DOCS_AND_FREQS);
+				fieldType.setStored(true);
+				fieldType.setStoreTermVectors(true);
+				fieldType.setTokenized(true);
+
+				parseXML(file, doc);
+			}
+		}
+
 	  public static String getAllText(Path f) { // TODO make http://stackoverflow.com/questions/12576119/lucene-indexing-of-html-files
 	        String textFileContent = "";
 
@@ -138,11 +156,11 @@ public class Main {
 			}
 	        return textFileContent;
 	    }
-	  
+
 	  /**
-	   * 
+	   *
 	   * Query syntax see http://lucene.apache.org/core/6_3_0/queryparser/index.html
-	   * 
+	   *
 	   * @param query
 	   * @param indexPath
 	   */
@@ -156,7 +174,7 @@ public class Main {
 			  Query query = parser.parse(queryStr);
 			  TopDocs res = searcher.search(query, 100);
 			  ScoreDoc[] hits = res.scoreDocs;
-		      
+
 		      for (int i = 0; i < hits.length; i++) {
 				Document doc = searcher.doc(hits[i].doc);
 				float score = hits[i].score;
