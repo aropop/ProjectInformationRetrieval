@@ -1,0 +1,134 @@
+\documentclass{article}
+\usepackage{vub}
+\usepackage{url}
+\usepackage{todonotes}
+\usepackage{courier}
+\usepackage{listings}
+\usepackage{float}
+\title{Project Report}
+\subtitle{Group 3}
+\faculty{}
+\author{Arno De Witte (0500504)\\Douglas Horemans (...)\\Wout Van Riel (...)}
+
+
+\begin{document}
+\maketitle
+
+
+\section{Overview Aspects}
+Below of all the assigned aspects for our group. All aspects were implemented. \\
+\begin{center}
+    \begin{tabular}{ | l | l | p{10cm} |}
+    \hline
+    Number & Letter & Aspect \\ \hline
+    1 & a & Implement full boolean querying supporting AND, OR and NOT. \\ \hline
+    2 & b & Include the use of soundex to deal with misspellings and improve recall.
+Demonstrate the improvement \\ \hline
+    3 & b & Build and use B-tree over the dictionary to deal with * wild-cards. \\ \hline
+    4 & a & Implement cosine ranking, using a heap to get the top k ranked documents. \\ \hline
+    5 & a & Implement cosine ranking with high-idf query terms only for optimization
+of top-k ranking. Demonstrate the improvement. \\ \hline
+    6 & c & Implement and demonstrate the vector space model for XML information
+retrieval. \\ 
+    \hline
+    \end{tabular}
+\end{center}
+
+\section{Technologies}
+To solve almost all of the aspects the Apache Lucene\footnote{\url{http://lucene.apache.org/core/}} was used. Lucene is a Java library which provides a lot of information retrieval functionalities out of the box. However because of its large API, finding the right way to do certain tasks becomes more complicated as none of the team members were familiar with the library. \\
+For the soundex aspect, the Apache Commons codec\footnote{\url{https://commons.apache.org/proper/commons-codec/}} libary was used as it provides a soundex codec.\\
+To parse the HTML documents to text JTidy\footnote{\url{http://jtidy.sourceforge.net/}} was used.\\
+The project is written as a java application. The project can be compiled by adding the \emph{lib} folder to the classpath. To use the system to search, first an index should be created as follows:
+\begin{lstlisting}[language=Bash]
+java -cp ./classpath Main index ./articles ./indexTarget
+\end{lstlisting}
+To search see the listing \ref{lst:search}.
+
+\section{Aspects}
+\subsection{Boolean querying}
+Lucene provides support for boolean queries. To implement this an index should be created and then be searched. The default implementation of lucene already supports these boolean queries. The syntax\footnote{\url{http://lucene.apache.org/core/6_3_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package.description}} for these queries is rather trivial. By default leaving spaces between query terms implies an OR-relation between these terms. Using the term \emph{AND} implies an AND-relation between terms and using the term \emph{NOT} implies a NOT-relation with the following term.\\
+To query the index you can use the \emph{search} command on the application as follows:
+\begin{lstlisting}[language=Bash, label={lst:search}]
+java -cp ./classpath Main search `car AND NOT bike' ./index
+\end{lstlisting}
+To test this implementation we used the small wikipedia dataset\footnote{\url{http://www.search-engines-book.com/collections//}}. The implementation was tested by searching with different query combinations and manually checking the resulting documents. While testing with the \emph{auto} query term, the system showed results that had \emph{auto} in their HTML syntax. Therefor a HTML parser was implemented to prevent this.
+
+\subsection{Soundex}
+To implement a soundex, the default analyzer, which converts text into terms, had to be changed. An analyzer was implemented that filters a standard tokenstream to a soundex tokenstream. This is done in the java method \emph{getSoundexAnalyzer}. This analyzer is then used by lucene's \emph{IndexWriter} and \emph{IndexReader} classes to convert the documents and queries to soundex alphabet.\\
+Because we need a new index with soundex terms the index command should be ran again, but a \emph{true} should be added as argument. The same has to be done when searching. It is recommended to also change the directory of the index to prevent the other index to be overwritten.\\
+To illustrate the implementation of the soundex we used one of the example of the slides. We searched \emph{Herman} and also \emph{Herman\textbf{n}}. Both queries resulted in the same output (the one listed below). You can see that the first result is about \emph{Harman} which is phonetically close to \emph{Herman}.
+  \begin{lstlisting}[basicstyle=\tiny\ttfamily, caption={High threshold}]
+  1. 0.43999153 -> /home/arno/workspace/informationRetrieval/project/articles/h/a/r/Harman's_Cross_railway_station_0dae.html
+   Title: Harman's Cross railway station - Wikipedia, the free encyclopedia
+  2. 0.40165547 -> /home/arno/workspace/informationRetrieval/project/articles/o/c/_/OC_Times_3f4f.html
+   Title: OC Times - Wikipedia, the free encyclopedia
+  3. 0.39354038 -> /home/arno/workspace/informationRetrieval/project/articles/d/e/s/Deshengmen.html
+   Title: Deshengmen - Wikipedia, the free encyclopedia
+  4. 0.34081593 -> /home/arno/workspace/informationRetrieval/project/articles/j/o/h/Johann_Hermann_Bauer_4adc.html
+   Title: Johann Hermann Bauer - Wikipedia, the free encyclopedia
+  5. 0.3279503 -> /home/arno/workspace/informationRetrieval/project/articles/o/n/_/On_the_Road_Again_(Canned_Heat_song)_ed5e.html
+   Title: On the Road Again (Canned Heat song) - Wikipedia, the free encyclopedia
+  \end{lstlisting}
+
+
+
+\subsection{B-tree wildcard}
+
+\subsection{Cosine ranking}
+Lucene's default ranking system is already based on a cosine ranking. It implements a \emph{TFIDFSimilarity} abstract class which provides the possibility to do cosine ranking (in lucene ranking is called scoring). When indexing lucene will calculate the inverse document frequency for each term by default.\\
+To implement this aspect we thus based ourselves on the default ranking of lucene. We modified it because it has some additional features which are not relevant for our system. For example we removed the overlap discount. Implementation details can be found in the \emph{Cosine} class and an explanation of each method can be found in the lucene documentation\footnote{\url{http://lucene.apache.org/core/6_3_0/core/org/apache/lucene/search/similarities/TFIDFSimilarity.html}}.
+
+\subsection{High idf query optimization}
+This optimization for the queries was rather difficult to implement. First because of the way the queries are parsed in lucene. Lucene creates immutable \emph{BooleanQuery} objects when using multiple terms in a query. Therefor each object has to recreated when going over each term to check it has an high idf. The Cosine class previously created was used to check the idf value of each term, terms below a threshold were filtered.\\
+When testing this implemenation a problem was found. The QueryParser of lucene already filters stopwords\footnote{\url{http://lucene.apache.org/core/6_3_0/core/org/apache/lucene/analysis/package-summary.html#package.description}} such as \emph{and}, \emph{this}, \emph{the}... These are the typical low idf value words we want to filter. To test the results we increased the threshold to 4 (which is already quite high) and compared the results:\\
+\begin{figure}[H]
+ \begin{minipage}{0.5\textwidth}
+  \centering
+  \begin{lstlisting}[basicstyle=\tiny\ttfamily, caption={High threshold}]
+  1. 0.9303905 -> articles/c/h/a/Charlie_Kelly_c049.html
+   Title: Charlie Kelly - Wikipedia, the free encyclopedia
+  2. 0.63305056 -> articles/d/u/c/Ducati_Multistrada_1162.html
+   Title: Ducati Multistrada - Wikipedia, the free encyclopedia
+  3. 0.41350687 -> articles/g/u/i/Guido_Leoni_5682.html
+   Title: Guido Leoni - Wikipedia, the free encyclopedia
+  4. 0.36549187 -> articles/l/a/k/Lake_Harriet_cf88.html
+   Title: Lake Harriet - Wikipedia, the free encyclopedia
+  5. 0.3618185 -> articles/d/a/r/Top_Gear~_Dare_Devil_fe12.html
+   Title: Top Gear: Dare Devil - Wikipedia, the free encyclopedia
+  \end{lstlisting}
+ \end{minipage}
+ \begin{minipage}{0.5\textwidth}
+  \centering
+  \begin{lstlisting}[basicstyle=\tiny\ttfamily, caption={Low threshold},belowskip=7 \baselineskip]
+  1. 0.624157 -> articles/d/u/c/Ducati_Multistrada_1162.html
+   Title: Ducati Multistrada - Wikipedia, the free encyclopedia
+  2. 0.3456331 -> articles/m/i/c/Michel_Pollentier_0f6f.html
+   Title: Michel Pollentier - Wikipedia, the free encyclopedia
+   
+  \end{lstlisting}
+ \end{minipage}
+\end{figure}
+These results were gathered using the query \emph{bike AND because}. The word \emph{because} has a low idf value and is this filtered when we set the threshold to 4. This will generate more results as we only use the term \emph{bike} for searching.
+
+
+\subsection{XML retrieval}
+
+\section{Workload}
+Below an overview of how the workload was distributed for this project
+
+\begin{center}
+    \begin{tabular}{ | l | l |}
+    \hline
+    \textbf{Task} & \textbf{Member}\\ \hline
+    Aspect 1 & Arno De Witte \\ \hline
+    Aspect 2 & Arno De Witte \\ \hline
+    Aspect 3 & Douglas Horemans \\ \hline
+    Aspect 4 & Arno De Witte \\ \hline
+    Aspect 5 & Arno De Witte \\ \hline
+    Aspect 6 & Wout Van Riel \\ \hline
+    Report & Group effort \\ \hline
+    \end{tabular}
+\end{center}
+
+
+\end{document}
