@@ -14,15 +14,20 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
 import org.xml.sax.SAXException;
 
 
 public class XMLParser {
+	
+	private ArrayList<String> paths;
 
-    public XMLParser(String filePath, Document index){
+    public XMLParser(String filePath){
       File xmlFile = new File(filePath);
       DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
       DocumentBuilder dBuilder;
+      
+      paths = new ArrayList<String>();
 
       try {
           dBuilder = dbFactory.newDocumentBuilder();
@@ -31,81 +36,67 @@ public class XMLParser {
           Element root = doc.getDocumentElement();
           NodeList nodeList = root.getChildNodes();
           //now XML is loaded as Document in memory, lets convert it to Object List
-          List<Employee> empList = new ArrayList<Employee>();
           for (int i = 0; i < nodeList.getLength(); i++) {
-              empList.add(getEmployee(nodeList.item(i)));
+        	  if (nodeList.item(i).getNodeType() == Node.ELEMENT_NODE) {
+                  Element element = (Element) nodeList.item(i);
+                  nodeTraverser(element, root.getTagName());
+                }
           }
           //lets print Employee list information
-          for (Employee emp : empList) {
-              System.out.println(emp.toString());
-          }
       } catch (SAXException | ParserConfigurationException | IOException e1) {
           e1.printStackTrace();
       }
     }
 
-    private nodeTraverser(Element el, String path){
-      String newPath = path + el.getTagName();
+    private void nodeTraverser(Element el, String path){
+      String newPath = path + "/" + el.getTagName();
+      
       if(el.hasChildNodes()){
         NodeList nodeList = el.getChildNodes();
         for(int i = 0; i < nodeList.getLength(); i++){
-          if (node.getNodeType() == Node.ELEMENT_NODE) {
+          if (nodeList.item(i).getNodeType() == Node.ELEMENT_NODE) {
             Element element = (Element) nodeList.item(i);
             nodeTraverser(element, newPath);
+          } else if(nodeList.item(i).getNodeType() == Node.TEXT_NODE){
+        	Text txt = (Text) nodeList.item(i);
+        	if(!txt.getTextContent().trim().equals("")){
+        		String[] txtContents = txt.getTextContent().split(" ");
+            	for(int j = 0; j < txtContents.length; j++){
+            		String cont = txtContents[j].replaceAll("\\s","");
+            		cont = cont.replaceAll("[^a-zA-Z]", "").toLowerCase();
+            		if(!cont.equals("")){
+            			paths.add(newPath + "#" + cont);
+            		}
+            	}
+        	}
           }
         }
-      } else {
-        addToIndex(Element el, String newPath);
       }
     }
-    private addToIndex(Element el, String path){
-      doc.add(new Field(el.getTextContent(), path, fieldType));
+    
+    public int getAmountOfPaths(){
+    	return paths.size();
     }
-
+    
+    public String getTerm(int pos){
+    	String path = paths.get(pos);
+    	return path.split("#")[1];
+    }
+    
+    public String getContext(int pos){
+    	String path = paths.get(pos);
+    	return path.split("#")[0];
+    }
+      
     public static void main(String[] args) {
-        String filePath = "employee.xml";
-
-        try {
-            dBuilder = dbFactory.newDocumentBuilder();
-            Document doc = dBuilder.parse(xmlFile);
-            doc.getDocumentElement().normalize();
-            System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
-            NodeList nodeList = doc.getElementsByTagName("Employee");
-            //now XML is loaded as Document in memory, lets convert it to Object List
-            List<Employee> empList = new ArrayList<Employee>();
-            for (int i = 0; i < nodeList.getLength(); i++) {
-                empList.add(getEmployee(nodeList.item(i)));
-            }
-            //lets print Employee list information
-            for (Employee emp : empList) {
-                System.out.println(emp.toString());
-            }
-        } catch (SAXException | ParserConfigurationException | IOException e1) {
-            e1.printStackTrace();
-        }
-
+        String filePath = "/home/wovari/information_retrieval/pages/932/509932.xml";
+    	XMLParser xmlparse = new XMLParser(filePath);
+    	
+    	System.out.println("SIZE: " + xmlparse.getAmountOfPaths());
+    	for(int i = 0; i < xmlparse.getAmountOfPaths(); i++){
+    		System.out.println(i);
+    		System.out.println(xmlparse.getTerm(i));
+    		System.out.println(xmlparse.getContext(i));
+    	}
     }
-
-
-    private static Employee getEmployee(Node node) {
-        //XMLReaderDOM domReader = new XMLReaderDOM();
-        Employee emp = new Employee();
-        if (node.getNodeType() == Node.ELEMENT_NODE) {
-            Element element = (Element) node;
-            emp.setName(getTagValue("name", element));
-            emp.setAge(Integer.parseInt(getTagValue("age", element)));
-            emp.setGender(getTagValue("gender", element));
-            emp.setRole(getTagValue("role", element));
-        }
-
-        return emp;
-    }
-
-
-    private static String getTagValue(String tag, Element element) {
-        NodeList nodeList = element.getElementsByTagName(tag).item(0).getChildNodes();
-        Node node = (Node) nodeList.item(0);
-        return node.getNodeValue();
-    }
-
 }

@@ -76,6 +76,34 @@ public class Main {
 	       "\n with message: " + e.getMessage());
 	    }
 	  }
+	  
+	  public static void indexXML(String indexPath, Path docDir){
+		  Date start = new Date();
+		    try {
+		      System.out.println("Indexing to directory '" + indexPath + "'...");
+
+		      Directory dir = FSDirectory.open(Paths.get(indexPath));
+		      Analyzer analyzer = new StandardAnalyzer();
+
+		      IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
+
+		      iwc.setOpenMode(OpenMode.CREATE);
+
+		      iwc.setSimilarity(new Cosine());
+
+		      IndexWriter writer = new IndexWriter(dir, iwc);
+		      indexXMLFiles(writer, docDir);
+
+		      writer.close();
+
+		      Date end = new Date();
+		      System.out.println(end.getTime() - start.getTime() + " total milliseconds");
+
+		    } catch (IOException e) {
+		      System.out.println(" caught a " + e.getClass() +
+		       "\n with message: " + e.getMessage());
+		    }
+	  }
 
 	  private static Analyzer getSoundexAnalyzer() {   // See http://stackoverflow.com/questions/38599692/how-to-implement-a-phonetic-search-using-lucene
 		  return new Analyzer() {
@@ -95,6 +123,24 @@ public class Main {
 		          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 		              try {
 		                  indexDoc(writer, file, attrs.lastModifiedTime().toMillis());
+		              } catch (IOException ignore) {
+		                  System.out.println("IO error on adding file");
+		              }
+		              return FileVisitResult.CONTINUE;
+		          }
+		      });
+		  } else {
+		      indexDoc(writer, path, Files.getLastModifiedTime(path).toMillis());
+		  }
+	  }
+	  
+	  private static void indexXMLFiles(final IndexWriter writer, Path path) throws IOException {
+	      if (Files.isDirectory(path)) {
+		      Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+		          @Override
+		          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+		              try {
+		                  indexXMLFile(writer, file, attrs.lastModifiedTime().toMillis());
 		              } catch (IOException ignore) {
 		                  System.out.println("IO error on adding file");
 		              }
@@ -135,7 +181,7 @@ public class Main {
 	    }
 	  }
 
-		private static void indexXML(IndexWriter writer, Path file, long lastModified) throws IOException {
+		private static void indexXMLFile(IndexWriter writer, Path file, long lastModified) throws IOException {
 			try (InputStream stream = Files.newInputStream(file)) {
 				Document doc = new Document();
 
@@ -146,10 +192,15 @@ public class Main {
 				FieldType fieldType = new FieldType();
 				fieldType.setIndexOptions(fieldType.indexOptions().DOCS_AND_FREQS);
 				fieldType.setStored(true);
-				fieldType.setStoreTermVectors(true);
+//				fieldType.setStoreTermVectors(true); //StoreTermVectors can cause an error
 				fieldType.setTokenized(true);
 
-				parseXML(file, doc);
+				System.out.println("adding " + file);
+				XMLParser xmlparse = new XMLParser(file.toString());
+				for(int i = 0; i < xmlparse.getAmountOfPaths(); i++){
+					doc.add(new Field(xmlparse.getTerm(i), xmlparse.getContext(i), fieldType));
+				}
+		         writer.addDocument(doc);
 			}
 		}
 
@@ -169,6 +220,7 @@ public class Main {
 	   *
 	   * Query syntax see http://lucene.apache.org/core/6_3_0/queryparser/index.html
 	   *
+	   **/
 
 
 
@@ -252,6 +304,8 @@ public class Main {
 			index(args[2], Paths.get(args[1]), args.length > 3 && args[3].equals("true"));
 		} else if(args[0].equals("search")) {
 			search(args[1], args[2], args.length > 3 && args[3].equals("true"));
+		} else if(args[0].equals("XML")) {
+			indexXML(args[2], Paths.get(args[1]));
 		}
 
 	}
