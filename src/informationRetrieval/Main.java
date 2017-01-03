@@ -30,6 +30,8 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.Terms;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause;
@@ -297,7 +299,52 @@ public class Main {
 			  System.out.println("Parser error: " + e.getMessage());
 			  e.printStackTrace();
 		}
-	  }
+	  } 
+	  
+	//@TODO Create custom scorer: http://dev.fernandobrito.com/2012/10/building-your-own-lucene-scorer/
+	private static void searchXML(String queryStr, String indexPath){
+		IndexReader reader;
+		try{
+			String term = queryStr.split("#")[1].replaceAll("[^a-zA-Z]", "").toLowerCase();
+			String context = queryStr.replaceAll("[/#]", "//").toLowerCase();
+			reader = DirectoryReader.open(FSDirectory.open(Paths.get(indexPath)));
+			IndexSearcher searcher = new IndexSearcher(reader);
+//			Terms terms = searcher.getIndexReader().getTermVector(, field)
+			Analyzer analyzer = new StandardAnalyzer();
+			QueryParser parser = new QueryParser(term, analyzer);
+			parser.setAllowLeadingWildcard(true);
+			Query query = parser.parse(context);
+			SimNoMerge snm = new SimNoMerge(query, reader, term, context);
+			
+			TopDocs res = searcher.search(snm, 100);
+			ScoreDoc[] hits = res.scoreDocs;
+
+		    for (int i = 0; i < hits.length; i++) {
+		    	Document doc = searcher.doc(hits[i].doc);
+				float score = hits[i].score;
+				if(score > 0){
+					String path = doc.get("path");
+					if (path != null) {
+					  System.out.println((i+1) + ". " + score + " -> " + path);
+//					  String title = doc.get("title");
+//					  if (title != null) {
+//					    System.out.println("   Title: " + doc.get("title"));
+//					  }
+					} else {
+					  System.out.println((i+1) + ". " + "No path for this document");
+					}
+				}
+				
+		     }
+			
+		} catch (IOException e) {
+			  System.out.println("IO error: " + e.getMessage());
+			  e.printStackTrace();
+		  } catch (ParseException e) {
+			  System.out.println("Parser error: " + e.getMessage());
+			  e.printStackTrace();
+		}
+	}
 
 	public static void main(String[] args) {
 		if(args[0].equals("index")) {
@@ -306,6 +353,8 @@ public class Main {
 			search(args[1], args[2], args.length > 3 && args[3].equals("true"));
 		} else if(args[0].equals("XML")) {
 			indexXML(args[2], Paths.get(args[1]));
+		} else if(args[0].equals("searchXML")) {
+			searchXML(args[1], args[2]);
 		}
 
 	}

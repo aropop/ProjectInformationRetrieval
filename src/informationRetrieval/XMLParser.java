@@ -85,7 +85,8 @@ public class XMLParser {
     
     public String getContext(int pos){
     	String path = paths.get(pos);
-    	return path.split("#")[0];
+    	String[] tmp = path.split("#");
+    	return tmp[0] + "/" + tmp[1];
     }
       
     public static void main(String[] args) {
