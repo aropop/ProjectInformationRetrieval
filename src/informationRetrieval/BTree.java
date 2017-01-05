@@ -197,7 +197,7 @@ public class BTree {
 
 	// comparison functions - make Comparable instead of Key to avoid casts
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private boolean less(Comparable k1, Comparable k2) {
+	private static boolean less(Comparable k1, Comparable k2) {
 		return k1.compareTo(k2) < 0;
 	}
 
@@ -241,7 +241,7 @@ public class BTree {
 	private static String nextString(String input){
 		int val = input.charAt(input.length() - 1);
 		++val;
-		return String.valueOf((char) val);
+		return input.substring(0, input.length()-1) + String.valueOf((char) val);
 	}
 
 	//Finds the answers for the given wildcard
@@ -252,4 +252,5 @@ public class BTree {
 		loop(str, upper, root, height, res);
 		return res;
 	};
+
 }
