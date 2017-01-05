@@ -8,7 +8,7 @@
 \title{Project Report}
 \subtitle{Group 3}
 \faculty{}
-\author{Arno De Witte (0500504)\\Douglas Horemans (...)\\Wout Van Riel (...)}
+\author{Arno De Witte (0500504)\\Douglas Horemans (500239)\\Wout Van Riel (...)}
 
 
 \begin{document}
@@ -18,20 +18,20 @@
 \section{Overview Aspects}
 Below of all the assigned aspects for our group. All aspects were implemented. \\
 \begin{center}
-    \begin{tabular}{ | l | l | p{10cm} |}
-    \hline
-    Number & Letter & Aspect \\ \hline
-    1 & a & Implement full boolean querying supporting AND, OR and NOT. \\ \hline
-    2 & b & Include the use of soundex to deal with misspellings and improve recall.
-Demonstrate the improvement \\ \hline
-    3 & b & Build and use B-tree over the dictionary to deal with * wild-cards. \\ \hline
-    4 & a & Implement cosine ranking, using a heap to get the top k ranked documents. \\ \hline
-    5 & a & Implement cosine ranking with high-idf query terms only for optimization
-of top-k ranking. Demonstrate the improvement. \\ \hline
-    6 & c & Implement and demonstrate the vector space model for XML information
-retrieval. \\ 
-    \hline
-    \end{tabular}
+	\begin{tabular}{ | l | l | p{10cm} |}
+		\hline
+		Number & Letter & Aspect                                                                    \\ \hline
+		1      & a      & Implement full boolean querying supporting AND, OR and NOT.               \\ \hline
+		2      & b      & Include the use of soundex to deal with misspellings and improve recall.
+		Demonstrate the improvement \\ \hline
+		3      & b      & Build and use B-tree over the dictionary to deal with * wild-cards.       \\ \hline
+		4      & a      & Implement cosine ranking, using a heap to get the top k ranked documents. \\ \hline
+		5      & a      & Implement cosine ranking with high-idf query terms only for optimization
+		of top-k ranking. Demonstrate the improvement. \\ \hline
+		6      & c      & Implement and demonstrate the vector space model for XML information
+		retrieval. \\
+		\hline
+	\end{tabular}
 \end{center}
 
 \section{Technologies}
@@ -57,7 +57,7 @@ To test this implementation we used the small wikipedia dataset\footnote{\url{ht
 To implement a soundex, the default analyzer, which converts text into terms, had to be changed. An analyzer was implemented that filters a standard tokenstream to a soundex tokenstream. This is done in the java method \emph{getSoundexAnalyzer}. This analyzer is then used by lucene's \emph{IndexWriter} and \emph{IndexReader} classes to convert the documents and queries to soundex alphabet.\\
 Because we need a new index with soundex terms the index command should be ran again, but a \emph{true} should be added as argument. The same has to be done when searching. It is recommended to also change the directory of the index to prevent the other index to be overwritten.\\
 To illustrate the implementation of the soundex we used one of the example of the slides. We searched \emph{Herman} and also \emph{Herman\textbf{n}}. Both queries resulted in the same output (the one listed below). You can see that the first result is about \emph{Harman} which is phonetically close to \emph{Herman}.
-  \begin{lstlisting}[basicstyle=\tiny\ttfamily, caption={High threshold}]
+\begin{lstlisting}[basicstyle=\tiny\ttfamily, caption={High threshold}]
   1. 0.43999153 -> /home/arno/workspace/informationRetrieval/project/articles/h/a/r/Harman's_Cross_railway_station_0dae.html
    Title: Harman's Cross railway station - Wikipedia, the free encyclopedia
   2. 0.40165547 -> /home/arno/workspace/informationRetrieval/project/articles/o/c/_/OC_Times_3f4f.html
@@ -68,12 +68,16 @@ To illustrate the implementation of the soundex we used one of the example of th
    Title: Johann Hermann Bauer - Wikipedia, the free encyclopedia
   5. 0.3279503 -> /home/arno/workspace/informationRetrieval/project/articles/o/n/_/On_the_Road_Again_(Canned_Heat_song)_ed5e.html
    Title: On the Road Again (Canned Heat song) - Wikipedia, the free encyclopedia
-  \end{lstlisting}
+\end{lstlisting}
 
 
 
 \subsection{B-tree wildcard}
-
+We had to build B-tree over the dictionary to deal with * wild-cards. To do so we first searched for an implementation of B-tree in Java. The implementation we based our code on is provided by the textbook ``Algorithms, 4th Edition'' written by two professors of the Department of Computer Science at the Princeton university,  Robert Sedgewick and Kevin Wayne.
+The implementation have been modified in multiple ways to be used as described in the slides.\\
+First, to be able to work with wildcards, the `biggest' attribute has been added to every node in the three. This attribute represents the biggest key in the subtree of the given node. The smallest value we already knew because it is the value of the first child of the given node, due to the structure of a B-tree. With the smallest and biggest value of the subtree of every node available, we can easily know which children it is worth to investigate of the given node.\\
+Secondly, to be sure the `biggest' attribute always stays up to date, the split function has been modified to update the `biggest' attribute of a node when it is split in two. \\
+Thirdly, by default in a B-tree every key is linked to one value. But in our case, the key is a term and the value is a postings list. Thus when adding a posting for a given term that is already in the B-tree the given posting should be added to the postings list of that term. We had thus to modify the insert function of the B-tree to do so.\\\\
 \subsection{Cosine ranking}
 Lucene's default ranking system is already based on a cosine ranking. It implements a \emph{TFIDFSimilarity} abstract class which provides the possibility to do cosine ranking (in lucene ranking is called scoring). When indexing lucene will calculate the inverse document frequency for each term by default.\\
 To implement this aspect we thus based ourselves on the default ranking of lucene. We modified it because it has some additional features which are not relevant for our system. For example we removed the overlap discount. Implementation details can be found in the \emph{Cosine} class and an explanation of each method can be found in the lucene documentation\footnote{\url{http://lucene.apache.org/core/6_3_0/core/org/apache/lucene/search/similarities/TFIDFSimilarity.html}}.
@@ -82,9 +86,9 @@ To implement this aspect we thus based ourselves on the default ranking of lucen
 This optimization for the queries was rather difficult to implement. First because of the way the queries are parsed in lucene. Lucene creates immutable \emph{BooleanQuery} objects when using multiple terms in a query. Therefor each object has to recreated when going over each term to check it has an high idf. The Cosine class previously created was used to check the idf value of each term, terms below a threshold were filtered.\\
 When testing this implemenation a problem was found. The QueryParser of lucene already filters stopwords\footnote{\url{http://lucene.apache.org/core/6_3_0/core/org/apache/lucene/analysis/package-summary.html#package.description}} such as \emph{and}, \emph{this}, \emph{the}... These are the typical low idf value words we want to filter. To test the results we increased the threshold to 4 (which is already quite high) and compared the results:\\
 \begin{figure}[H]
- \begin{minipage}{0.5\textwidth}
-  \centering
-  \begin{lstlisting}[basicstyle=\tiny\ttfamily, caption={High threshold}]
+	\begin{minipage}{0.5\textwidth}
+		\centering
+		\begin{lstlisting}[basicstyle=\tiny\ttfamily, caption={High threshold}]
   1. 0.9303905 -> articles/c/h/a/Charlie_Kelly_c049.html
    Title: Charlie Kelly - Wikipedia, the free encyclopedia
   2. 0.63305056 -> articles/d/u/c/Ducati_Multistrada_1162.html
@@ -95,18 +99,18 @@ When testing this implemenation a problem was found. The QueryParser of lucene a
    Title: Lake Harriet - Wikipedia, the free encyclopedia
   5. 0.3618185 -> articles/d/a/r/Top_Gear~_Dare_Devil_fe12.html
    Title: Top Gear: Dare Devil - Wikipedia, the free encyclopedia
-  \end{lstlisting}
- \end{minipage}
- \begin{minipage}{0.5\textwidth}
-  \centering
-  \begin{lstlisting}[basicstyle=\tiny\ttfamily, caption={Low threshold},belowskip=7 \baselineskip]
+		\end{lstlisting}
+	\end{minipage}
+	\begin{minipage}{0.5\textwidth}
+		\centering
+		\begin{lstlisting}[basicstyle=\tiny\ttfamily, caption={Low threshold},belowskip=7 \baselineskip]
   1. 0.624157 -> articles/d/u/c/Ducati_Multistrada_1162.html
    Title: Ducati Multistrada - Wikipedia, the free encyclopedia
   2. 0.3456331 -> articles/m/i/c/Michel_Pollentier_0f6f.html
    Title: Michel Pollentier - Wikipedia, the free encyclopedia
-   
-  \end{lstlisting}
- \end{minipage}
+
+		\end{lstlisting}
+	\end{minipage}
 \end{figure}
 These results were gathered using the query \emph{bike AND because}. The word \emph{because} has a low idf value and is this filtered when we set the threshold to 4. This will generate more results as we only use the term \emph{bike} for searching.
 
@@ -117,17 +121,17 @@ These results were gathered using the query \emph{bike AND because}. The word \e
 Below an overview of how the workload was distributed for this project
 
 \begin{center}
-    \begin{tabular}{ | l | l |}
-    \hline
-    \textbf{Task} & \textbf{Member}\\ \hline
-    Aspect 1 & Arno De Witte \\ \hline
-    Aspect 2 & Arno De Witte \\ \hline
-    Aspect 3 & Douglas Horemans \\ \hline
-    Aspect 4 & Arno De Witte \\ \hline
-    Aspect 5 & Arno De Witte \\ \hline
-    Aspect 6 & Wout Van Riel \\ \hline
-    Report & Group effort \\ \hline
-    \end{tabular}
+	\begin{tabular}{ | l | l |}
+		\hline
+		\textbf{Task} & \textbf{Member}  \\ \hline
+		Aspect 1      & Arno De Witte    \\ \hline
+		Aspect 2      & Arno De Witte    \\ \hline
+		Aspect 3      & Douglas Horemans \\ \hline
+		Aspect 4      & Arno De Witte    \\ \hline
+		Aspect 5      & Arno De Witte    \\ \hline
+		Aspect 6      & Wout Van Riel    \\ \hline
+		Report        & Group effort     \\ \hline
+	\end{tabular}
 \end{center}
 
 
