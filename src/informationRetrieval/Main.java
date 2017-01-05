@@ -318,8 +318,10 @@ public class Main {
 				TermsEnum termsEnum = ts.iterator();
 				while (termsEnum.next() != null) {
 					BytesRef t = termsEnum.next();
-					dict.add(t.utf8ToString(), 0);
-				}
+					if(t != null) {
+						dict.add(t.utf8ToString(), 0);
+					}
+				}	
 			}
 		}
 		
