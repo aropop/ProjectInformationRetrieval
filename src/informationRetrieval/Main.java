@@ -33,6 +33,7 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.index.MultiFields;
+import org.apache.lucene.index.PostingsEnum;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -306,32 +307,53 @@ public class Main {
 	}
 
 
-	private static void searchBtree(String queryStr, String indexPath) throws IOException{
+	private static void searchBtree(String queryStr, String indexPath) throws Exception{
+		//Constructing dict
 		Dictionary dict = new Dictionary();
 
+		//Reading term-docID indexed by Lucene
 		IndexReader reader;
 		reader = DirectoryReader.open(FSDirectory.open(Paths.get(indexPath)));
 		Fields f = MultiFields.getFields(reader);
+		//Loop over fields to get term-docID
 		for(String field : f) {
 			if(field.equals("contents")) {
 				Terms ts = f.terms(field);
 				TermsEnum termsEnum = ts.iterator();
-				while (termsEnum.next() != null) {
-					BytesRef t = termsEnum.next();
-					if(t != null) {
-						dict.add(t.utf8ToString(), 0);
-					}
+
+				BytesRef currTerm =  termsEnum.next();
+				while (currTerm != null) {
+					PostingsEnum currPosting = termsEnum.postings(null);
+					currPosting.nextDoc();
+					dict.add(currTerm.utf8ToString(), currPosting);
+					currTerm = termsEnum.next();
+
 				}	
 			}
 		}
-		
+
+		//Using dict to execute wildcard
 		ArrayList<termDocIDs> res = dict.get(queryStr);
 
 		for(int i = 0; i < res.size(); i++){
 			termDocIDs curr = res.get(i);
 			System.out.print(curr.term);
-			System.out.print("-->");
-			System.out.println(curr.docIDs);
+			System.out.print(" --> ");
+			
+			PostingsEnum docIDs = curr.docIDs;
+			docIDs.nextDoc();
+			int prevDocID = -1;
+			while(docIDs != null){
+				int currDocID = docIDs.docID();
+				if(currDocID == prevDocID){
+					break;
+				}
+				System.out.print(currDocID);
+				System.out.print(", ");
+				prevDocID = currDocID;
+				docIDs.nextDoc();
+			}
+			System.out.println("");
 		}
 	}
 
@@ -379,7 +401,7 @@ public class Main {
 		}
 	}
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 		if(args[0].equals("index")) {
 			index(args[2], Paths.get(args[1]), args.length > 3 && args[3].equals("true"));
 		} else if(args[0].equals("search")) {

@@ -1,12 +1,12 @@
 package informationRetrieval;
 
-import java.util.ArrayList;
+import org.apache.lucene.index.PostingsEnum;
 
 public class termDocIDs {
 	public String term;
-	public ArrayList<Integer> docIDs;
+	public PostingsEnum docIDs;
 
-	public termDocIDs(String term, ArrayList<Integer> docIDs){
+	public termDocIDs(String term, PostingsEnum docIDs){
 		this.term = term;
 		this.docIDs = docIDs;
 	}
@@ -19,12 +19,7 @@ public class termDocIDs {
 
 		termDocIDs casted = (termDocIDs) obj;
 
-		if(this.docIDs.size() != casted.docIDs.size()){return false;}
-		
-		ArrayList<Integer> commonIDs = this.docIDs;
-		commonIDs.retainAll(casted.docIDs);
-
-		if ((this.term.equals(casted.term)) && (commonIDs.size() == this.docIDs.size())){
+		if (this.term.equals(casted.term)){
 			return true;
 		}
 
