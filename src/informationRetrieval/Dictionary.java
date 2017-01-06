@@ -2,6 +2,8 @@ package informationRetrieval;
 
 import java.util.ArrayList;
 
+import org.apache.lucene.index.PostingsEnum;
+
 public class Dictionary {
 	BTree tree = new BTree();
 	BTree reverseTree = new BTree();
@@ -10,7 +12,7 @@ public class Dictionary {
 		return new StringBuilder(str).reverse().toString();
 	}
 	
-	public void add(String key, int val){
+	public void add(String key, PostingsEnum val) throws Exception{
 		String reverseKey = reverseString(key);
 		this.tree.put(key, val);
 		this.reverseTree.put(reverseKey, val);

@@ -2,6 +2,8 @@ package informationRetrieval;
 
 import java.util.ArrayList;
 
+import org.apache.lucene.index.PostingsEnum;
+
 /******************************************************************************
  Source: http://algs4.cs.princeton.edu/62btree/BTree.java
  Modified for the Information Retrieval Course, Group 3
@@ -41,11 +43,11 @@ public class BTree {
 	// external nodes: only use key and value
 	private static class Entry {
 		private String key;
-		private ArrayList<Integer> val = new ArrayList<Integer>();
+		private PostingsEnum val = null;
 		private Node next;     // helper field to iterate over array entries
-		public Entry(String key, Integer val, Node next) {
+		public Entry(String key, PostingsEnum val, Node next) {
 			this.key  = key;
-			this.val.add(val);
+			this.val = (val);
 			this.next = next;
 		}
 	}
@@ -91,12 +93,12 @@ public class BTree {
 	 *         and {@code null} if the key is not in the symbol table
 	 * @throws IllegalArgumentException if {@code key} is {@code null}
 	 */
-	public ArrayList<Integer> get(String key) {
+	public PostingsEnum get(String key) {
 		if (key == null) throw new IllegalArgumentException("argument to get() is null");
 		return search(root, key, height);
 	}
 
-	private ArrayList<Integer> search(Node x, String key, int ht) {
+	private PostingsEnum search(Node x, String key, int ht) {
 		Entry[] children = x.children;
 
 		// external node
@@ -123,9 +125,10 @@ public class BTree {
 	 *
 	 * @param  key the key
 	 * @param  val the value
+	 * @throws Exception 
 	 * @throws IllegalArgumentException if {@code key} is {@code null}
 	 */
-	public void put(String key, Integer val) {
+	public void put(String key, PostingsEnum val) throws Exception {
 		if (key == null) throw new IllegalArgumentException("argument key to put() is null");
 		Node u = insert(root, key, val, height); 
 		n++;
@@ -139,7 +142,7 @@ public class BTree {
 		height++;
 	}
 
-	private Node insert(Node h, String key, Integer val, int ht) {
+	private Node insert(Node h, String key, PostingsEnum val, int ht) throws Exception{
 		int j;
 		Entry t = new Entry(key, val, null);
 
@@ -150,8 +153,11 @@ public class BTree {
 		// external node
 		if (ht == 0) {
 			for (j = 0; j < h.m; j++) {
-				if (less(key, h.children[j].key) || eq(key, h.children[j].key)){
+				if (less(key, h.children[j].key)){
 					break;
+				}
+				if (eq(key, h.children[j].key)){
+					throw new Exception("Dictionary already contains Term");
 				}
 			}
 		}
@@ -168,11 +174,6 @@ public class BTree {
 				}
 			}
 		}
-
-		if((h.children[j] != null) && eq(key, h.children[j].key)){
-			h.children[j].val.add(val);
-			return null;
-		};
 
 		for (int i = h.m; i > j; i--)
 			h.children[i] = h.children[i-1];
@@ -210,7 +211,7 @@ public class BTree {
 	private boolean eq(Comparable k1, Comparable k2) {
 		return k1.compareTo(k2) == 0;
 	}
-	
+
 	//Loops over the BTree to find Key-Value pairs where Key matches given wildcard
 	private void loop(String lower, String upper, Node n, int ht, ArrayList<termDocIDs> res){
 		if(ht == 0){
@@ -223,7 +224,7 @@ public class BTree {
 			}
 			return;
 		}
-		
+
 		//Two conditions to not investigate subTree
 		if(bigger(n.getSmallestChild(), upper)){return;}
 		if(less(n.biggest, lower)){return;}
