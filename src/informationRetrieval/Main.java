@@ -362,10 +362,9 @@ public class Main {
 		IndexReader reader;
 		try{
 			String term = queryStr.split("#")[1].replaceAll("[^a-zA-Z]", "").toLowerCase();
-			String context = queryStr.replaceAll("[/#]", "//").toLowerCase();
+			String context = queryStr.split("#")[0].replaceAll("[/]", "//").toLowerCase();
 			reader = DirectoryReader.open(FSDirectory.open(Paths.get(indexPath)));
 			IndexSearcher searcher = new IndexSearcher(reader);
-			//			Terms terms = searcher.getIndexReader().getTermVector(, field)
 			Analyzer analyzer = new StandardAnalyzer();
 			QueryParser parser = new QueryParser(term, analyzer);
 			parser.setAllowLeadingWildcard(true);

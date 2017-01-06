@@ -120,9 +120,27 @@ These results were gathered using the query \emph{bike AND because}. The word \e
 
 
 \subsection{XML retrieval}
+For the sixth aspect we had to implement the vector space model for XML information retrieval.
+Because XML is a standard for encoding structured documents, the indexing of the files and searching
+through the files had to be adapted for these documents. To work with the data we represent the path from the root to
+the leaf in a XML-tree as the pair $<c,t>$ where $c$ is the XML-context and $t$ is the vocabulary term. If a leaf consists
+of text, every word in the text is seen as a vocabulary term and will become a pair with the XML-context.
+To make it work with Lucene can be seen as a challenge because Lucene is intended to be used with unstructured data.
+We will represent this pairs as fields where the vocabulary term is the fields name and the context is its value.
+For the retrieval part, a custom scorer was created that could work with the XML-context.
+The scoring function is $\sum_{c_{d} \in d, c_{q} \in q}\frac{weight(d,t,c_{d}) * Cr(c_{q}, c_{d})}{normalizer}$ where the weight function is the
+inverse document frequence (idf) times the term frequency weighting (wf). $Cr$ is the context resemblance function and checks
+if $c_{q}$ can be transformed into $c_{d}$ with only additions. If this is the case, the function will return $\frac{\|c_{q}\| + 1}{\|c_{d}\| + 1}$.
+The scoring function will go over every document that is returned by the query, in our case the documents that contain
+fields with a name that equals the vocabulary term, and return a score for every document.
+Because Lucene scores all the documents one by one, it is not possible to implement the normalization function that is
+suggested in the book. The value used for the normalization in our implementation, is the weighted term frequency of all terms
+that have given vocabulary term.
+The weight function for queries is not implemented because our implementation can only process queries that contain one
+path with following syntax: \emph{xml\/context\#vocabularyterm}.
 
 \section{Workload}
-Below an overview of how the workload was distributed for this project
+Below an overview of how the workload was distributed for this project. Note that due to the available API's of Lucene some tasks were easier than others. The XML retrieval and BTree aspects were more complicated because a lack of support in lucene. We think that the workload was evenly distributed.
 
 \begin{center}
 	\begin{tabular}{ | l | l |}
@@ -136,7 +154,7 @@ Below an overview of how the workload was distributed for this project
 		Aspect 6      & Wout Van Riel    \\ \hline
 		Report        & Group effort     \\ \hline
 	\end{tabular}
-\end{center}
+\end{center}t
 
 
 \end{document}
