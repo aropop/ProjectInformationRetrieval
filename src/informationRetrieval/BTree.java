@@ -140,6 +140,8 @@ public class BTree {
 		t.children[1] = new Entry(u.children[0].key, null, u);
 		root = t;
 		height++;
+		
+		t.biggest = t.children[t.m-1].next.biggest;
 	}
 
 	private Node insert(Node h, String key, PostingsEnum val, int ht) throws Exception{
@@ -190,20 +192,23 @@ public class BTree {
 
 		//If node splitted biggest should be replaced by biggest of subtree of new node (first part of splitted node)
 		h.biggest = (h.children[(M/2)-1].next != null) ? h.children[(M/2)-1].next.biggest : h.children[(M/2)-1].key;
-
+		//If node splitted biggest of new node should be biggest of subtree second part of old node
+		t.biggest = (h.children[M-1].next != null) ? h.children[M-1].next.biggest : h.children[M-1].key;
+		
 		for (int j = 0; j < M/2; j++)
 			t.children[j] = h.children[M/2+j]; 
+		
 		return t;    
 	}
 
 	// comparison functions - make Comparable instead of Key to avoid casts
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private static boolean less(Comparable k1, Comparable k2) {
+	public static boolean less(Comparable k1, Comparable k2) {
 		return k1.compareTo(k2) < 0;
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked"})
-	private boolean bigger(Comparable k1, Comparable k2){
+	public static boolean bigger(Comparable k1, Comparable k2){
 		return k1.compareTo(k2) > 0;
 	}
 
@@ -212,14 +217,22 @@ public class BTree {
 		return k1.compareTo(k2) == 0;
 	}
 
+	private String reverseString(String str){
+		return new StringBuilder(str).reverse().toString();
+	}
+	
 	//Loops over the BTree to find Key-Value pairs where Key matches given wildcard
-	private void loop(String lower, String upper, Node n, int ht, ArrayList<termDocIDs> res){
+	private void loop(String lower, String upper, Node n, int ht, ArrayList<termDocIDs> res, Boolean reverse){
 		if(ht == 0){
 			// Search in children what matches
 			for(int i = 0; i < n.m; i++){
 				String curr = n.children[i].key;
 				if(eq(curr, lower) || (bigger(curr, lower) && less(curr, upper))){
-					res.add(new termDocIDs(n.children[i].key, n.children[i].val));
+					if(reverse){
+						res.add(new termDocIDs(reverseString(n.children[i].key), n.children[i].val));
+					}else{
+						res.add(new termDocIDs(n.children[i].key, n.children[i].val));
+					}
 				}
 			}
 			return;
@@ -228,10 +241,10 @@ public class BTree {
 		//Two conditions to not investigate subTree
 		if(bigger(n.getSmallestChild(), upper)){return;}
 		if(less(n.biggest, lower)){return;}
-
+		
 		//Investigate all subTrees
 		for(int i = 0; i < n.m; i++){
-			loop(lower, upper, n.children[i].next, (ht -1), res);
+			loop(lower, upper, n.children[i].next, (ht -1), res, reverse);
 		}
 
 		return;
@@ -247,10 +260,10 @@ public class BTree {
 
 	//Finds the answers for the given wildcard
 	//Wildcard should be of the form x* where x is a string
-	public ArrayList<termDocIDs> wildcard(String str){
+	public ArrayList<termDocIDs> wildcard(String str, Boolean reverse){
 		ArrayList<termDocIDs> res = new ArrayList<termDocIDs>();
 		String upper = nextString(str);
-		loop(str, upper, root, height, res);
+		loop(str, upper, root, height, res, reverse);
 		return res;
 	};
 

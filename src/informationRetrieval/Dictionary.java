@@ -22,14 +22,14 @@ public class Dictionary {
 		Parse parse = new Parse(str);
 		
 		if(parse.left.isEmpty()){
-			return this.reverseTree.wildcard(reverseString(parse.right));
+			return this.reverseTree.wildcard(reverseString(parse.right), true);
 		}
 		if(parse.right.isEmpty()){
-			return this.tree.wildcard(parse.left);
+			return this.tree.wildcard(parse.left, false);
 		}
 		
-		ArrayList<termDocIDs> firstPart = tree.wildcard(parse.left);
-		ArrayList<termDocIDs> secondPart = reverseTree.wildcard(reverseString(parse.right));
+		ArrayList<termDocIDs> firstPart = tree.wildcard(parse.left, false);
+		ArrayList<termDocIDs> secondPart = reverseTree.wildcard(reverseString(parse.right), true);
 		firstPart.retainAll(secondPart);
 		
 		return firstPart;
