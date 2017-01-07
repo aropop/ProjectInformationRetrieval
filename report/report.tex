@@ -8,7 +8,7 @@
 \title{Project Report}
 \subtitle{Group 3}
 \faculty{}
-\author{Arno De Witte (0500504)\\Douglas Horemans (500239)\\Wout Van Riel (...)}
+\author{Arno De Witte (0500504)\\Douglas Horemans (500239)\\Wout Van Riel (500229)}
 
 
 \begin{document}
@@ -138,6 +138,46 @@ suggested in the book. The value used for the normalization in our implementatio
 that have given vocabulary term.
 The weight function for queries is not implemented because our implementation can only process queries that contain one
 path with following syntax: \emph{xml\/context\#vocabularyterm}.
+The following commands can be used to work with the XML retrieval:
+\begin{lstlisting}[language=Bash, label={lst:search}]
+#for indexing
+java -cp ./classpath Main XML ./pages/to/index ./index
+
+#for searching
+java -cp ./classpath Main searchXML `context#vocterm' ./index
+\end{lstlisting}
+The data used to test the XML retrieval was a part of the INEX 2009 collection\footnote{\url{http://www.mpi-inf.mpg.de/departments/databases-and-information-systems/software/inex/}}.
+As an example we index directory 000 of the INEX 2009 collection.
+We then searched for the vocabulary term \emph{\#belgian} only. Nine XML documents are then returned that contain the word \emph{belgian} as vocabulary term.
+\begin{figure}[H]
+	\begin{minipage}{0.5\textwidth}
+		\centering
+		\begin{lstlisting}[basicstyle=\tiny\ttfamily, caption={High threshold}]
+			1. 2.2662091 -> pages/000/1000.xml
+			2. 0.70147693 -> pages/000/8805000.xml
+			3. 0.4171691 -> pages/000/11538000.xml
+			4. 0.36837515 -> pages/000/17423000.xml
+			5. 0.20538285 -> pages/000/16049000.xml
+			6. 0.09226496 -> pages/000/368000.xml
+			7. 0.061509967 -> pages/000/7000.xml
+			8. 0.055358972 -> pages/000/16197000.xml
+			9. 0.05032634 -> pages/000/994000.xml
+		\end{lstlisting}
+	\end{minipage}
+\end{figure}
+As you can see the first result has a value that is bigger than one. This means that our scoring function is not a true cosine.
+Then if we add a small path to it, for example \emph{nationality\#belgian}, only the files that contain a node \emph{nationality} and the vocabulary term \emph{belgian}
+are returned.
+In our case:
+\begin{figure}[H]
+	\begin{minipage}{0.5\textwidth}
+		\centering
+		\begin{lstlisting}[basicstyle=\tiny\ttfamily, caption={High threshold}]
+			1. 0.11225033 -> pages/000/1000.xml
+		\end{lstlisting}
+	\end{minipage}
+\end{figure}
+Only one file of the nine remains because none of the other files have a node \emph{nationality}.
 
 \section{Workload}
 Below an overview of how the workload was distributed for this project. Note that due to the available API's of Lucene some tasks were easier than others. The XML retrieval and BTree aspects were more complicated because a lack of support in lucene. We think that the workload was evenly distributed.
