@@ -122,9 +122,11 @@ These results were gathered using the query \emph{bike AND because}. The word \e
 \subsection{XML retrieval}
 For the sixth aspect we had to implement the vector space model for XML information retrieval.
 Because XML is a standard for encoding structured documents, the indexing of the files and searching
-through the files had to be adapted for these documents. To work with the data we represent the path from the root to
+through the files had to be adapted for these documents. To work with the data, we represent the path from the root to
 the leaf in a XML-tree as the pair $<c,t>$ where $c$ is the XML-context and $t$ is the vocabulary term. If a leaf consists
 of text, every word in the text is seen as a vocabulary term and will become a pair with the XML-context.
+The context is not split in smaller pieces or shortened before it is indexed to keep it simple and not lose any information.
+This however will have implications on the scoring because deeper nested vocabulary terms will be scored lower by the context resemblance.
 To make it work with Lucene can be seen as a challenge because Lucene is intended to be used with unstructured data.
 We will represent this pairs as fields where the vocabulary term is the fields name and the context is its value.
 For the retrieval part, a custom scorer \emph{SimNoMerge} was created that could work with the XML-context.
