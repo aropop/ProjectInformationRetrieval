@@ -368,7 +368,7 @@ public class Main {
 			Analyzer analyzer = new StandardAnalyzer();
 			QueryParser parser = new QueryParser(term, analyzer);
 			parser.setAllowLeadingWildcard(true);
-			Query query = parser.parse(context);
+			Query query = parser.parse("*");
 			SimNoMerge snm = new SimNoMerge(query, reader, term, context);
 
 			TopDocs res = searcher.search(snm, 100);
