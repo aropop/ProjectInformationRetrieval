@@ -3,6 +3,8 @@
 \usepackage{url}
 \usepackage{todonotes}
 \usepackage{courier}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
 \usepackage{listings}
 \usepackage{float}
 \title{Project Report}
@@ -10,7 +12,7 @@
 \faculty{}
 \author{Arno De Witte (0500504)\\Douglas Horemans (500239)\\Wout Van Riel (500229)}
 
-
+\lstset{upquote=true}
 \begin{document}
 \maketitle
 
@@ -40,7 +42,7 @@ For the soundex aspect, the Apache Commons codec\footnote{\url{https://commons.a
 To parse the HTML documents to text JTidy\footnote{\url{http://jtidy.sourceforge.net/}} was used.\\
 The project is written as a java application. The project can be compiled by adding the \emph{lib} folder to the classpath. To use the system to search, first an index should be created as follows:
 \begin{lstlisting}[language=Bash]
-java -cp ./classpath Main index ./articles ./indexTarget
+java -cp "classpath/:lib/*" Main index ./articles ./indexTarget
 \end{lstlisting}
 To search see the listing \ref{lst:search}.
 
@@ -49,7 +51,7 @@ To search see the listing \ref{lst:search}.
 Lucene provides support for boolean queries. To implement this an index should be created and then be searched. The default implementation of lucene already supports these boolean queries. The syntax\footnote{\url{http://lucene.apache.org/core/6_3_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package.description}} for these queries is rather trivial. By default leaving spaces between query terms implies an OR-relation between these terms. Using the term \emph{AND} implies an AND-relation between terms and using the term \emph{NOT} implies a NOT-relation with the following term.\\
 To query the index you can use the \emph{search} command on the application as follows:
 \begin{lstlisting}[language=Bash, label={lst:search}]
-java -cp ./classpath Main search `car AND NOT bike' ./index
+java -cp "classpath/:lib/*" Main search `car AND NOT bike' ./index
 \end{lstlisting}
 To test this implementation we used the small wikipedia dataset\footnote{\url{http://www.search-engines-book.com/collections//}}. The implementation was tested by searching with different query combinations and manually checking the resulting documents. While testing with the \emph{auto} query term, the system showed results that had \emph{auto} in their HTML syntax. Therefor a HTML parser was implemented to prevent this.
 
@@ -143,10 +145,10 @@ path with following syntax: \emph{xml\/context\#vocabularyterm}.
 The following commands can be used to work with the XML retrieval:
 \begin{lstlisting}[language=Bash, label={lst:search}]
 #for indexing
-java -cp ./classpath Main XML ./pages/to/index ./index
+java -cp "classpath/:lib/*" Main XML ./pages/to/index ./index
 
 #for searching
-java -cp ./classpath Main searchXML `context#vocterm' ./index
+java -cp "classpath/:lib/*" Main searchXML `context#vocterm' ./index
 \end{lstlisting}
 The data used to test the XML retrieval was a part of the INEX 2009 collection\footnote{\url{http://www.mpi-inf.mpg.de/departments/databases-and-information-systems/software/inex/}}.
 As an example we index directory 000 of the INEX 2009 collection.
