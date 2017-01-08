@@ -112,7 +112,7 @@ public class Main {
 		}
 	}
 
-	private static Analyzer getSoundexAnalyzer() {   // See http://stackoverflow.com/questions/38599692/how-to-implement-a-phonetic-search-using-lucene
+	private static Analyzer getSoundexAnalyzer() { 
 		return new Analyzer() {
 			@Override
 			protected TokenStreamComponents createComponents(String fieldName) {
@@ -199,7 +199,6 @@ public class Main {
 			FieldType fieldType = new FieldType();
 			fieldType.setIndexOptions(fieldType.indexOptions().DOCS_AND_FREQS);
 			fieldType.setStored(true);
-			//				fieldType.setStoreTermVectors(true); //StoreTermVectors can cause an error
 			fieldType.setTokenized(true);
 
 			System.out.println("adding " + file);
@@ -211,7 +210,7 @@ public class Main {
 		}
 	}
 
-	public static String getAllText(Path f) { // TODO make http://stackoverflow.com/questions/12576119/lucene-indexing-of-html-files
+	public static String getAllText(Path f) {
 		String textFileContent = "";
 
 		try {
@@ -328,7 +327,7 @@ public class Main {
 					dict.add(currTerm.utf8ToString(), currPosting);
 					currTerm = termsEnum.next();
 
-				}	
+				}
 			}
 		}
 
@@ -339,7 +338,7 @@ public class Main {
 			termDocIDs curr = res.get(i);
 			System.out.print(curr.term);
 			System.out.print(" --> ");
-			
+
 			PostingsEnum docIDs = curr.docIDs;
 			docIDs.nextDoc();
 			int prevDocID = -1;
@@ -357,7 +356,6 @@ public class Main {
 		}
 	}
 
-	//@TODO Create custom scorer: http://dev.fernandobrito.com/2012/10/building-your-own-lucene-scorer/
 	private static void searchXML(String queryStr, String indexPath){
 		IndexReader reader;
 		try{
@@ -381,10 +379,6 @@ public class Main {
 					String path = doc.get("path");
 					if (path != null) {
 						System.out.println((i+1) + ". " + score + " -> " + path);
-						//					  String title = doc.get("title");
-						//					  if (title != null) {
-						//					    System.out.println("   Title: " + doc.get("title"));
-						//					  }
 					} else {
 						System.out.println((i+1) + ". " + "No path for this document");
 					}

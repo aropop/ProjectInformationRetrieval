@@ -99,6 +99,12 @@ public class SimNoMerge extends CustomScoreQuery{
 	}
 	
 	
+	/**
+	 * 
+	 * getCustomScoreProvider is the custom score provider created so that Lucene can score XML files.
+	 * The weight is calculated by multiplying idf with the weighted tf.
+	 * 
+	 */
 	
 	public CustomScoreProvider getCustomScoreProvider(LeafReaderContext context) {
 		return new CustomScoreProvider(context) {
