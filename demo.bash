@@ -14,6 +14,7 @@ function pause(){
 }
 # Pre
 sed -i -e 's/public final static float IDF_TRESHOLD = 1;/public final static float IDF_TRESHOLD = 4;/g' src/informationRetrieval/Main.java
+mkdir -p binHighIDF
 javac -d binHighIDF -cp "lib/*" src/informationRetrieval/*.java
 sed -i -e 's/public final static float IDF_TRESHOLD = 4;/public final static float IDF_TRESHOLD = 1;/g' src/informationRetrieval/Main.java
 javac -d bin -cp "lib/*" src/informationRetrieval/*.java
