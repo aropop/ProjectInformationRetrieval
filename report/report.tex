@@ -42,7 +42,7 @@ For the soundex aspect, the Apache Commons codec\footnote{\url{https://commons.a
 To parse the HTML documents to text JTidy\footnote{\url{http://jtidy.sourceforge.net/}} was used.\\
 The project is written as a java application. The project can be compiled by adding the \emph{lib} folder to the classpath. To use the system to search, first an index should be created as follows:
 \begin{lstlisting}[language=Bash]
-java -cp "classpath/:lib/*" Main index ./articles ./indexTarget
+java -cp "classpath/:lib/*" InformationRetrieval.Main index ./articles ./indexTarget
 \end{lstlisting}
 To search see the listing \ref{lst:search}.
 
@@ -51,7 +51,7 @@ To search see the listing \ref{lst:search}.
 Lucene provides support for boolean queries. To implement this an index should be created and then be searched. The default implementation of lucene already supports these boolean queries. The syntax\footnote{\url{http://lucene.apache.org/core/6_3_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package.description}} for these queries is rather trivial. By default leaving spaces between query terms implies an OR-relation between these terms. Using the term \emph{AND} implies an AND-relation between terms and using the term \emph{NOT} implies a NOT-relation with the following term.\\
 To query the index you can use the \emph{search} command on the application as follows:
 \begin{lstlisting}[language=Bash, label={lst:search}]
-java -cp "classpath/:lib/*" Main search `car AND NOT bike' ./index
+java -cp "classpath/:lib/*" InformationRetrieval.Main search `car AND NOT bike' ./index
 \end{lstlisting}
 To test this implementation we used the small wikipedia dataset\footnote{\url{http://www.search-engines-book.com/collections//}}. The implementation was tested by searching with different query combinations and manually checking the resulting documents. While testing with the \emph{auto} query term, the system showed results that had \emph{auto} in their HTML syntax. Therefor a HTML parser was implemented to prevent this.
 
@@ -75,7 +75,7 @@ To illustrate the implementation of the soundex we used one of the example of th
 
 
 \subsection{B-tree wildcard}
-We had to build a B-tree over the dictionary to deal with * wild-cards. To do so we first searched for an implementation of B-tree in Java. The implementation we based our code on is provided by the textbook ``Algorithms, 4th Edition'' written by two professors of the Department of Computer Science at the Princeton university,  Robert Sedgewick and Kevin Wayne.
+We had to build a B-tree over the dictionary to deal with * wild-cards. To do so we first searched for an implementation of B-tree in Java. The implementation we based our code on, is provided by the textbook ``Algorithms, 4th Edition'' written by two professors of the Department of Computer Science at the Princeton university,  Robert Sedgewick and Kevin Wayne.
 The implementation has been modified in multiple ways to be used as described in the slides.\\
 First, to be able to work with wildcards, the `biggest' attribute has been added to every node in the three. This attribute represents the biggest key in the subtree of the given node. The smallest value we already knew because it is the value of the first child of the given node, due to the structure of a B-tree. With the smallest and biggest value of the subtree of every node available, we can easily know which children it is worth to investigate.\\
 Secondly, to be sure the `biggest' attribute always stays up to date, some functions have been modified. As an example the split function has been modified to update the `biggest' attribute of a node when it is split in two.\\
@@ -132,7 +132,7 @@ the leaf in a XML-tree as the pair $<c,t>$ where $c$ is the XML-context and $t$ 
 of text, every word in the text is seen as a vocabulary term and will become a pair with the XML-context.
 The context is not split in smaller pieces or shortened before it is indexed to keep it simple and not lose any information.
 This however will have implications on the scoring because deeper nested vocabulary terms will be scored lower by the context resemblance.
-To make it work with Lucene can be seen as a challenge because Lucene is intended to be used with unstructured data.
+To make it work with Lucene, can be seen as a challenge because Lucene is intended to be used with unstructured data.
 We will represent this pairs as fields where the vocabulary term is the fields name and the context is its value.
 For the retrieval part, a custom scorer \emph{SimNoMerge} was created that could work with the XML-context.
 The scoring function is $\sum_{c_{d} \in d, c_{q} \in q}\frac{weight(d,t,c_{d}) * Cr(c_{q}, c_{d})}{normalizer}$ where the weight function is the
@@ -148,10 +148,10 @@ path with following syntax: \emph{xml\/context\#vocabularyterm}.
 The following commands can be used to work with the XML retrieval:
 \begin{lstlisting}[language=Bash, label={lst:search}]
 #for indexing
-java -cp "classpath/:lib/*" Main XML ./pages/to/index ./index
+java -cp "classpath/:lib/*" InformationRetrieval.Main XML ./pages/to/index ./index
 
 #for searching
-java -cp "classpath/:lib/*" Main searchXML `context#vocterm' ./index
+java -cp "classpath/:lib/*" InformationRetrieval.Main searchXML `context#vocterm' ./index
 \end{lstlisting}
 The data used to test the XML retrieval was a part of the INEX 2009 collection\footnote{\url{http://www.mpi-inf.mpg.de/departments/databases-and-information-systems/software/inex/}}.
 As an example we index directory 000 of the INEX 2009 collection.
@@ -202,7 +202,13 @@ Below an overview of how the workload was distributed for this project. Note tha
 		Aspect 6      & Wout Van Riel    \\ \hline
 		Report        & Group effort     \\ \hline
 	\end{tabular}
-\end{center}t
+\end{center}
+
+\section{Compilation}
+To compile the code use following command:
+\begin{lstlisting}[language=Bash, label={lst:compilation}]
+javac -cp "lib/*" -d classpath src/informationRetrieval/*.java
+\end{lstlisting}
 
 
 \end{document}
