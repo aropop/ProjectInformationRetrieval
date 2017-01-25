@@ -27,7 +27,10 @@ pause 'java -cp "bin/:lib/*" informationRetrieval.Main search "car AND NOT bike"
 pause 'java -cp "bin/:lib/*" informationRetrieval.Main index articles/ indexSoundex/ true'
 pause 'java -cp "bin/:lib/*" informationRetrieval.Main search "herman" indexSoundex/ true | head -20'
 pause 'java -cp "bin/:lib/*" informationRetrieval.Main search "hermann" indexSoundex/ true | head -20'
-
+# Aspect 3
+pause 'java -cp "bin/:lib/*" informationRetrieval.Main searchBtree "car*" "index/"'
+pause 'java -cp "bin/:lib/*" informationRetrieval.Main searchBtree "*car" "index/"'
+pause 'java -cp "bin/:lib/*" informationRetrieval.Main searchBtree "c*r" "index/"'
 # Aspect 4, 5 (IDF)
 pause 'java -cp "binHighIDF/:lib/*" informationRetrieval.Main search "bike AND because" index/ | head -20'
 pause 'java -cp "bin/:lib/*" informationRetrieval.Main search "bike AND because" index/ | head -20'
