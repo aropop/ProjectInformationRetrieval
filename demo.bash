@@ -6,11 +6,11 @@ function pause(){
     echo ""
     echo -e "${COLOR}$1${NC}"
     read key
-    if [ "$key" != "n" ] 
+    if [ "$key" != "n" ]
     then
          eval $1
     fi
-    read 
+    read
 }
 # Pre
 sed -i -e 's/public final static float IDF_TRESHOLD = 1;/public final static float IDF_TRESHOLD = 4;/g' src/informationRetrieval/Main.java
@@ -32,3 +32,9 @@ pause 'java -cp "bin/:lib/*" informationRetrieval.Main search "hermann" indexSou
 pause 'java -cp "binHighIDF/:lib/*" informationRetrieval.Main search "bike AND because" index/ | head -20'
 pause 'java -cp "bin/:lib/*" informationRetrieval.Main search "bike AND because" index/ | head -20'
 
+# Aspect 6 (XML)
+pause 'java -cp "bin/:lib/*" informationRetrieval.Main XML XML/pages/ indexXML/'
+pause 'java -cp "bin/:lib/*" informationRetrieval.Main searchXML "writer/country#france" indexXML/'
+pause 'java -cp "bin/:lib/*" informationRetrieval.Main searchXML "writer/country#belgium" indexXML/'
+pause 'java -cp "bin/:lib/*" informationRetrieval.Main searchXML "football_player/country#belgium" indexXML/'
+pause 'java -cp "bin/:lib/*" informationRetrieval.Main searchXML "#belgium" indexXML/'
